@@ -5,11 +5,11 @@ Provided by Jacob Buckman.
 
 Good reference materials
 
-https://d2l.ai/
-https://fleuret.org/public/lbdl.pdf
-https://karpathy.github.io/2015/05/21/rnn-effectiveness/
-https://www.youtube.com/watch?v=zjkBMFhNj_g
-https://www.youtube.com/@statquest
+- https://d2l.ai/
+- https://fleuret.org/public/lbdl.pdf
+- https://karpathy.github.io/2015/05/21/rnn-effectiveness/
+- https://www.youtube.com/watch?v=zjkBMFhNj_g
+- https://www.youtube.com/@statquest
 
 Suggested projects
 
