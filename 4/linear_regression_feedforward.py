@@ -55,16 +55,12 @@ class FeedforwardNN(nn.Module):
         self,
         x_train: np.ndarray,
         y_train: np.ndarray,
-        x_val: np.ndarray,
-        y_val: np.ndarray,
     ) -> None:
         """
         Train the model using the provided data.
 
         :param x_train: Input features for training.
         :param y_train: True output values for training.
-        :param x_val: Input features for validation.
-        :param y_val: True output values for validation.
         """
         # Convert NumPy arrays to PyTorch tensors with explicit dtype
         x_tensor = torch.tensor(x_train, dtype=torch.float32)  # No need to reshape
