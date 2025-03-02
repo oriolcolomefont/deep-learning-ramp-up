@@ -1,5 +1,4 @@
 import numpy as np
-from tqdm import tqdm
 
 
 class LinearRegressionSGD:
@@ -52,95 +51,102 @@ class LinearRegressionSGD:
         """
         return np.mean((y_true - y_pred) ** 2)
 
-    def fit(self, x: np.ndarray, y: np.ndarray) -> None:
+    def fit(self, x: np.ndarray, y: np.ndarray, x_val: np.ndarray = None, y_val: np.ndarray = None) -> None:
         """
         Train the model using the provided data.
 
         :param x: Input features.
         :param y: True output values.
+        :param x_val: Validation input features.
+        :param y_val: Validation true output values.
         """
         n_samples = x.shape[0]
 
-        with tqdm(total=self.epochs, desc="Training") as pbar:
-            for epoch in range(self.epochs):
-                indices = np.random.permutation(n_samples)
-                x_shuffled = x[indices]
-                y_shuffled = y[indices]
+        for epoch in range(self.epochs):
+            # Shuffle data
+            indices = np.random.permutation(n_samples)
+            x_shuffled = x[indices]
+            y_shuffled = y[indices]
 
-                for start in range(0, n_samples, self.batch_size):
-                    end = start + self.batch_size
-                    x_batch = x_shuffled[start:end]
-                    y_batch = y_shuffled[start:end]
+            # Mini-batch training
+            for start in range(0, n_samples, self.batch_size):
+                end = start + self.batch_size
+                x_batch = x_shuffled[start:end]
+                y_batch = y_shuffled[start:end]
 
-                    y_pred = self.predict(x_batch)
-                    loss = self.compute_loss(y_batch, y_pred)
+                # Forward pass
+                y_pred = self.predict(x_batch)
 
-                    # Compute gradients using partial derivatives of MSE loss
-                    # For weight: d(MSE)/dw = -2 * mean(x * (y_true - y_pred))
-                    # This comes from chain rule: d(MSE)/dw = d(MSE)/d(y_pred)
-                    # * d(y_pred)/dw
-                    d_weight = -2 * np.mean(x_batch * (y_batch - y_pred))
-                    
-                    # For bias: d(MSE)/db = -2 * mean(y_true - y_pred) 
-                    # Similarly derived using chain rule: d(MSE)/db = d(MSE)/
-                    # d(y_pred) * d(y_pred)/db
-                    d_bias = -2 * np.mean(y_batch - y_pred)
+                # Compute gradients using partial derivatives of MSE loss
+                # For weight: d(MSE)/dw = -2 * mean(x * (y_true - y_pred))
+                # This comes from chain rule: d(MSE)/dw = d(MSE)/d(y_pred)
+                # * d(y_pred)/dw
+                d_weight = -2 * np.mean(x_batch * (y_batch - y_pred))
+                
+                # For bias: d(MSE)/db = -2 * mean(y_true - y_pred) 
+                # Similarly derived using chain rule: d(MSE)/db = d(MSE)/
+                # d(y_pred) * d(y_pred)/db
+                d_bias = -2 * np.mean(y_batch - y_pred)
 
-                    # Update parameters
-                    self.weight -= self.learning_rate * d_weight
-                    self.bias -= self.learning_rate * d_bias
+                # Update parameters
+                self.weight -= self.learning_rate * d_weight
+                self.bias -= self.learning_rate * d_bias
 
-                # Print debug information
-                if epoch % 100 == 0:
-                    tqdm.write(
-                        f"Epoch {epoch}, Loss: {loss:.4f}, "
-                        f"Weight: {self.weight:.4f}, Bias: {self.bias:.4f}, "
-                        f"dWeight: {d_weight:.4f}, dBias: {d_bias:.4f}"
+            # Print debug information
+            if epoch % 100 == 0:
+                train_loss = self.compute_loss(y, self.predict(x))
+                if x_val is not None and y_val is not None:
+                    val_loss = self.compute_loss(y_val, self.predict(x_val))
+                    print(
+                        f"Epoch {epoch}, Train Loss: {train_loss:.4f}, "
+                        f"Val Loss: {val_loss:.4f}, Weight: {self.weight:.4f}, "
+                        f"Bias: {self.bias:.4f}"
                     )
-
-                pbar.update(1)
+                else:
+                    print(
+                        f"Epoch {epoch}, Train Loss: {train_loss:.4f}, "
+                        f"Weight: {self.weight:.4f}, Bias: {self.bias:.4f}"
+                    )
 
 
 def generate_synthetic_data(
-    n_samples: int = 1000
-) -> tuple[np.ndarray, np.ndarray, float, float]:
+    n_samples: int = 2000, validation_split: float = 0.2
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
-    Generate synthetic data for training.
+    Generate synthetic data for training and validation.
 
     :param n_samples: Number of samples to generate.
-    :return: Tuple of input features, target outputs, and normalization
-    parameters.
+    :param validation_split: Fraction of data to be used as validation set.
+    :return: Tuple of training and validation input features and target outputs.
     """
-    x = np.random.rand(n_samples) * 10  # Random inputs
-    y = 3.5 * x + np.random.randn(n_samples) * 2  # Linear function with noise
+    x = np.random.rand(n_samples) * 10
+    y = 3.5 * x + np.random.randn(n_samples) * 2
     
-    # Normalize the input features
-    x_mean = np.mean(x)
-    x_std = np.std(x)
-    x_normalized = (x - x_mean) / x_std
+    # Normalize both x and y to zero mean and unit variance
+    x = (x - np.mean(x)) / np.std(x)
+    y = (y - np.mean(y)) / np.std(y)
     
-    # Normalize the target variable
-    y_mean = np.mean(y)
-    y_std = np.std(y)
-    y_normalized = (y - y_mean) / y_std
+    # Split into training and validation sets
+    split_index = int(n_samples * (1 - validation_split))
+    x_train, x_val = x[:split_index], x[split_index:]
+    y_train, y_val = y[:split_index], y[split_index:]
     
-    return x_normalized, y_normalized, y_mean, y_std
+    return x_train, y_train, x_val, y_val
 
 
 if __name__ == "__main__":
     # Generate synthetic data
-    x_train, y_train, y_mean, y_std = generate_synthetic_data()
+    x_train, y_train, x_val, y_val = generate_synthetic_data()
 
     # Initialize and train the model
     model = LinearRegressionSGD(
-        learning_rate=0.01, 
-        batch_size=32, 
-        epochs=2000
+        learning_rate=0.005,
+        batch_size=16,
+        epochs=5000
     )
-    model.fit(x_train, y_train)
+    model.fit(x_train, y_train, x_val, y_val)
 
     # Example prediction
     x_new = np.array([5.0])
-    y_pred_normalized = model.predict(x_new)
-    y_pred = y_pred_normalized * y_std + y_mean  # Denormalize the prediction
+    y_pred = model.predict(x_new)
     print(f"Prediction for input {x_new[0]}: {y_pred[0]:.2f}")
