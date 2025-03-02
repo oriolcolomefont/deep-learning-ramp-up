@@ -7,10 +7,7 @@ class LinearRegressionSGD:
     """
 
     def __init__(
-        self, 
-        learning_rate: float = 0.01, 
-        batch_size: int = 32, 
-        epochs: int = 2000
+        self, learning_rate: float = 0.01, batch_size: int = 32, epochs: int = 2000
     ):
         """
         Initialize the Linear Regression model.
@@ -51,7 +48,13 @@ class LinearRegressionSGD:
         """
         return np.mean((y_true - y_pred) ** 2)
 
-    def fit(self, x: np.ndarray, y: np.ndarray, x_val: np.ndarray = None, y_val: np.ndarray = None) -> None:
+    def fit(
+        self,
+        x: np.ndarray,
+        y: np.ndarray,
+        x_val: np.ndarray = None,
+        y_val: np.ndarray = None,
+    ) -> None:
         """
         Train the model using the provided data.
 
@@ -82,8 +85,8 @@ class LinearRegressionSGD:
                 # This comes from chain rule: d(MSE)/dw = d(MSE)/d(y_pred)
                 # * d(y_pred)/dw
                 d_weight = -2 * np.mean(x_batch * (y_batch - y_pred))
-                
-                # For bias: d(MSE)/db = -2 * mean(y_true - y_pred) 
+
+                # For bias: d(MSE)/db = -2 * mean(y_true - y_pred)
                 # Similarly derived using chain rule: d(MSE)/db = d(MSE)/
                 # d(y_pred) * d(y_pred)/db
                 d_bias = -2 * np.mean(y_batch - y_pred)
@@ -121,16 +124,16 @@ def generate_synthetic_data(
     """
     x = np.random.rand(n_samples) * 10
     y = 3.5 * x + np.random.randn(n_samples) * 2
-    
+
     # Normalize both x and y to zero mean and unit variance
     x = (x - np.mean(x)) / np.std(x)
     y = (y - np.mean(y)) / np.std(y)
-    
+
     # Split into training and validation sets
     split_index = int(n_samples * (1 - validation_split))
     x_train, x_val = x[:split_index], x[split_index:]
     y_train, y_val = y[:split_index], y[split_index:]
-    
+
     return x_train, y_train, x_val, y_val
 
 
@@ -139,11 +142,7 @@ if __name__ == "__main__":
     x_train, y_train, x_val, y_val = generate_synthetic_data()
 
     # Initialize and train the model
-    model = LinearRegressionSGD(
-        learning_rate=0.005,
-        batch_size=16,
-        epochs=5000
-    )
+    model = LinearRegressionSGD(learning_rate=0.005, batch_size=16, epochs=5000)
     model.fit(x_train, y_train, x_val, y_val)
 
     # Example prediction
